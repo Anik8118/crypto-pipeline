@@ -1,0 +1,12 @@
+crypto_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: host.docker.internal
+      user: de_user
+      password: de_pass
+      port: 5432
+      dbname: crypto
+      schema: analytics
+      threads: 4

@@ -1,8 +1,13 @@
-import requests
+import os
+
 import pandas as pd
+import requests
 from sqlalchemy import create_engine, text
 
-DB_URL = "postgresql+psycopg2://de_user:de_pass@localhost:5432/crypto"
+DB_URL = os.getenv(
+    "DB_URL",
+    "postgresql+psycopg2://de_user:de_pass@localhost:5432/crypto",
+)
 
 
 def extract():
