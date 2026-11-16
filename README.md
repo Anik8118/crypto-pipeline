@@ -1,118 +1,73 @@
-\# Crypto Price ETL Pipeline
+# Crypto Price ETL Pipeline
 
+An end-to-end data engineering project: it collects cryptocurrency prices from a public API every hour, stores them in PostgreSQL, transforms them with dbt, tests the results, and orchestrates everything with Apache Airflow.
 
+## Architecture
 
-A small data engineering project that collects cryptocurrency prices from a public API, cleans them, and stores them in PostgreSQL.
+CoinGecko API -> pipeline.py (Python, pandas) -> PostgreSQL (raw table) -> dbt (staging view + daily summary table) -> dbt tests
 
+The whole flow is scheduled hourly by an Airflow DAG running in Docker.
 
+## What each part does
 
-\## Architecture
+- **Extract / Load (pipeline.py):** fetches Bitcoin, Ethereum and Solana prices (USD), converts timestamps to UTC, and inserts them into `public.crypto_prices`. It is idempotent: the primary key `(coin, price_time)` with `ON CONFLICT DO NOTHING` prevents duplicates.
+- **Transform (crypto_dbt/):** a dbt project with a staging model (`stg_crypto_prices`, a view) and a mart model (`daily_price_summary`, a table) in the `analytics` schema.
+- **Data quality:** dbt tests check for nulls and accepted coin names.
+- **Orchestration (airflow/):** the `crypto_pipeline` DAG runs `run_pipeline -> dbt_run -> dbt_test` every hour.
 
-
-
-CoinGecko API -> Python (requests, pandas) -> PostgreSQL (running in Docker)
-
-
-
-\## What it does
-
-
-
-\- \*\*Extract:\*\* fetches Bitcoin, Ethereum and Solana prices (USD) from the CoinGecko API
-
-\- \*\*Transform:\*\* converts the response into a pandas DataFrame and turns Unix timestamps into UTC datetimes
-
-\- \*\*Load:\*\* inserts the rows into a `crypto\_prices` table in PostgreSQL
-
-
-
-The pipeline is idempotent: the primary key `(coin, price\_time)` together with `ON CONFLICT DO NOTHING` means running it multiple times never creates duplicate rows.
-
-
-
-\## Tech stack
-
-
-
-Python, pandas, SQLAlchemy, PostgreSQL, Docker
-
-
-
-\## How to run
-
-
-
-1\. Install Python and Docker Desktop.
-
-2\. Create a virtual environment and install dependencies:
-
-
+## Project structure
 
 ```
-
-python -m venv venv
-
-venv\\Scripts\\activate
-
-pip install -r requirements.txt
-
+pipeline.py            ETL script
+docker-compose.yml     PostgreSQL
+crypto_dbt/            dbt project (models, tests)
+airflow/               Airflow in Docker (Dockerfile, compose files, DAGs)
 ```
 
+## How to run
 
-
-3\. Start PostgreSQL:
-
-
+1. Start PostgreSQL:
 
 ```
-
 docker compose up -d
-
 ```
 
-
-
-4\. Run the pipeline:
-
-
+2. Run the ETL script once by hand:
 
 ```
-
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 python pipeline.py
-
 ```
 
-
-
-\## Example query
-
-
-
-```sql
-
-SELECT coin,
-
-&#x20;      price\_time,
-
-&#x20;      price\_usd,
-
-&#x20;      price\_usd - LAG(price\_usd) OVER (PARTITION BY coin ORDER BY price\_time) AS change
-
-FROM crypto\_prices
-
-ORDER BY coin, price\_time;
+3. Run dbt by hand (dbt Core with the Postgres adapter, Python 3.12 or 3.13):
 
 ```
+cd crypto_dbt
+dbt run
+dbt test
+```
 
+4. Run everything with Airflow:
 
+```
+cd airflow
+echo AIRFLOW_UID=50000> .env
+echo AIRFLOW_IMAGE_NAME=crypto-airflow:1.0>> .env
+docker build -t crypto-airflow:1.0 .
+docker compose up airflow-init
+docker compose up -d
+```
 
-\## Roadmap
+Open http://localhost:8080 (user and password: airflow), switch on the `crypto_pipeline` DAG and trigger it.
 
+## Tech stack
 
+Python, pandas, SQLAlchemy, PostgreSQL, dbt, Apache Airflow, Docker
 
-\- Transformations with dbt
+## Roadmap
 
-\- Scheduling with Apache Airflow
-
-\- Dashboard for the price history
-
+- Dashboard for the price history
+- Move secrets out of the repository
+- Cloud data warehouse (for example BigQuery)
