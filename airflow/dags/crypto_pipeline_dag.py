@@ -16,8 +16,6 @@ with DAG(
     run_pipeline = BashOperator(
         task_id="run_pipeline",
         bash_command=f"python {PROJECT}/pipeline.py",
-        env={"DB_URL": "postgresql+psycopg2://de_user:de_pass@host.docker.internal:5432/crypto"},
-        append_env=True,
     )
 
     dbt_run = BashOperator(

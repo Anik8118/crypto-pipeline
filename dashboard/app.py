@@ -1,9 +1,24 @@
+import os
+
 import altair as alt
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 
-engine = create_engine("postgresql+psycopg2://de_user:de_pass@localhost:5432/crypto")
+load_dotenv()
+
+engine = create_engine(
+    URL.create(
+        "postgresql+psycopg2",
+        username=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        database=os.environ["POSTGRES_DB"],
+    )
+)
 
 st.title("Crypto Price Dashboard")
 

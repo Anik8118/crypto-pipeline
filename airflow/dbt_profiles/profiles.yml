@@ -3,10 +3,10 @@ crypto_dbt:
   outputs:
     dev:
       type: postgres
-      host: host.docker.internal
-      user: de_user
-      password: de_pass
+      host: "{{ env_var('DB_HOST', 'localhost') }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
       port: 5432
-      dbname: crypto
+      dbname: "{{ env_var('POSTGRES_DB') }}"
       schema: analytics
       threads: 4

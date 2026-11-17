@@ -3,11 +3,29 @@ import os
 import pandas as pd
 import requests
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
 
-DB_URL = os.getenv(
-    "DB_URL",
-    "postgresql+psycopg2://de_user:de_pass@localhost:5432/crypto",
-)
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
+
+def get_db_url():
+    # Airflow এখনো পুরো DB_URL পাঠায়, থাকলে সেটাই ব্যবহার হবে
+    full_url = os.getenv("DB_URL")
+    if full_url:
+        return full_url
+    return URL.create(
+        "postgresql+psycopg2",
+        username=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        database=os.environ["POSTGRES_DB"],
+    )
 
 
 def extract():
@@ -58,7 +76,7 @@ def load(df, engine):
 
 
 if __name__ == "__main__":
-    engine = create_engine(DB_URL)
+    engine = create_engine(get_db_url())
     raw = extract()
     df = transform(raw)
     print(df)
