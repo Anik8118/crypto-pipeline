@@ -24,6 +24,17 @@ crypto_dbt/            dbt project (models, tests)
 airflow/               Airflow in Docker (Dockerfile, compose files, DAGs)
 ```
 
+## Configuration
+
+Secrets are not stored in the repository. Create a `.env` file in the project root from the example:
+
+```
+copy .env.example .env
+```
+
+Then set `POSTGRES_PASSWORD` to your own value. For Airflow, create `airflow/.env` with `AIRFLOW_UID`, `AIRFLOW_IMAGE_NAME`, `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`.
+
+
 ## How to run
 
 1. Start PostgreSQL:
