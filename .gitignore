@@ -4,3 +4,4 @@ venv-dbt/
 logs/
 .env
 venv-dash/
+venv-bq/

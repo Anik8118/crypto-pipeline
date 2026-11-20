@@ -2,6 +2,6 @@ version: 2
 
 sources:
   - name: crypto
-    schema: public
+    schema: "{{ 'crypto_raw' if target.type == 'bigquery' else 'public' }}"
     tables:
       - name: crypto_prices
