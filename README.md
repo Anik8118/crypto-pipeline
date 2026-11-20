@@ -92,3 +92,21 @@ copy .env.example .env
 ```
 
 Then set `POSTGRES_PASSWORD` to your own value. For Airflow, create `airflow/.env` with `AIRFLOW_UID`, `AIRFLOW_IMAGE_NAME`, `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`.
+
+
+
+## BigQuery
+
+The same dbt models also run on Google BigQuery (sandbox, no billing needed).
+
+1. Create a Google Cloud project and a dataset called `crypto_raw`.
+2. Log in with `gcloud auth application-default login` and set `GCP_PROJECT_ID` in `.env`.
+3. Load the raw table: `python load_to_bigquery.py`
+4. Add a `bq` target (BigQuery, oauth) to your dbt profile, then:
+
+```
+dbt run --target bq
+dbt test --target bq
+```
+
+The dashboard has a sidebar switch to read from BigQuery or PostgreSQL.
